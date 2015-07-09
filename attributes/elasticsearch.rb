@@ -1,1 +1,1 @@
-default['elasticsearch']["cluster_name"] = "dev-elk"
+default['elasticsearch']["cluster_name"] = "elasticsearch"
