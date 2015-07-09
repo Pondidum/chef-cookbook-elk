@@ -19,7 +19,6 @@ end
 package "elasticsearch"
 
 template '/etc/elasticsearch/elasticsearch.yml' do
-  source 'elasticsearch.yml.erb'
   owner 'root'
   group 'root'
   mode '0644'
@@ -28,6 +27,37 @@ template '/etc/elasticsearch/elasticsearch.yml' do
 end
 
 service "elasticsearch" do
+  supports :status => true, :restart => true
+  action [:enable, :start]
+end
+
+kibana_source_path = '/tmp/kibana.tar.gz'
+remote_file kibana_source_path do
+  source 'https://download.elastic.co/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz'
+  action :create
+end
+
+bash 'extract_kibana' do
+  cwd ::File.dirname(kibana_source_path)
+  code <<-EOH
+    tar xvf kibana.tar.gz
+    rm /tmp/kibana*/config/kibana.yml
+    sudo mkdir -p /opt/kibana
+    sudo cp -R ~/kibana-4*/* /opt/kibana/
+    rm -rf /tmp/kibana*/
+  EOH
+end
+
+remote_file '/etc/init.d/kibana' do
+  source 'https://gist.githubusercontent.com/thisismitch/8b15ac909aed214ad04a/raw/bce61d85643c2dcdfbc2728c55a41dab444dca20/kibana4'
+  action :create
+end
+
+template 'opt/kibana/config/kibana.yml' do
+  notifies :restart, "service[kibana]"
+end
+
+service 'kibana' do
   supports :status => true, :restart => true
   action [:enable, :start]
 end
