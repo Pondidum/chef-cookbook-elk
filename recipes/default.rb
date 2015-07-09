@@ -18,6 +18,16 @@ end
 
 package "elasticsearch"
 
+template '/etc/elasticsearch/elasticsearch.yml' do
+  source 'elasticsearch.yml.erb'
+  owner 'root'
+  group 'root'
+  mode '0644'
+
+  notifies :restart, "service[elasticsearch]"
+end
+
 service "elasticsearch" do
+  supports :status => true, :restart => true
   action [:enable, :start]
 end
